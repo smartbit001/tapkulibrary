@@ -307,10 +307,6 @@ static UIImage *tileImage;
 - (void) drawTileInRect:(CGRect)rect index:(NSInteger)index day:(NSInteger)day dayInMonth:(BOOL)dayInMonth layoutAttributes:(NSDictionary *)layoutAttributes context:(CGContextRef)context {
     CGContextSaveGState(context);
     
-    // firstweekday 1 == sunday, firstweekday 2 == monday etc
-    NSInteger column = index % 7;
-    BOOL weekend = (column == 5 || column == 6);
-    
     UIColor *fontColor = layoutAttributes[@"FontColor"];
     UIColor *backgroundColor = layoutAttributes[@"BackgroundColor"];
     UIColor *strokeColor = [UIColor colorWithHex:0xb3b3b3];
@@ -323,8 +319,10 @@ static UIImage *tileImage;
     }
     
     if ([layoutAttributes[@"PartOfDay"] isEqualToString:@"am"]) {
+        [self drawRectInRect:rect strokeColor:strokeColor fillColor:[UIColor colorWithHex:0xe6e6e6] context:context];
         [self drawTriangleInRect:rect strokeColor:strokeColor fillColor:backgroundColor context:context am:YES];
     } else if ([layoutAttributes[@"PartOfDay"] isEqualToString:@"pm"]) {
+        [self drawRectInRect:rect strokeColor:strokeColor fillColor:[UIColor colorWithHex:0xe6e6e6] context:context];
         [self drawTriangleInRect:rect strokeColor:strokeColor fillColor:backgroundColor context:context am:NO];
     } else {
         [self drawRectInRect:rect strokeColor:strokeColor fillColor:backgroundColor context:context];
@@ -411,14 +409,9 @@ static UIImage *tileImage;
     NSInteger post = (pre + daysInMonth) % 7 == 0 ? 0 : ((((pre + daysInMonth) / 7) * 7) + 7) - (pre + daysInMonth);
     NSInteger numberOfDays = pre + daysInMonth + post;
     
-    CGContextRef context = UIGraphicsGetCurrentContext();
-    CGContextSetInterpolationQuality(context, kCGInterpolationNone);
     NSDictionary *attributes = [self.layoutAttributes count] ? self.layoutAttributes[0] : @{};
     
-    UIImage *tile = attributes[@"TileImage"] ?: tileImage;
-	CGRect r = CGRectMake(-1, 0, 46, 44);
-    
-	CGContextDrawTiledImage(context, r, tile.CGImage);
+    CGContextRef context = UIGraphicsGetCurrentContext();
     
     for (NSInteger i = 0; i < numberOfDays; i++) {
         NSInteger day = i + 1 - pre;
@@ -699,7 +692,7 @@ static UIImage *tileImage;
 	[self addSubview:self.rightArrow];
 	[self addSubview:self.tileBox];
 	[self addSubview:self.monthYear];
-	[self addSubview:self.shadow];
+	//[self addSubview:self.shadow];
     
 	NSDateFormatter *dateFormat = [[NSDateFormatter alloc] init];
 	dateFormat.dateFormat = @"eee";
