@@ -409,8 +409,6 @@ static UIImage *tileImage;
     NSInteger post = (pre + daysInMonth) % 7 == 0 ? 0 : ((((pre + daysInMonth) / 7) * 7) + 7) - (pre + daysInMonth);
     NSInteger numberOfDays = pre + daysInMonth + post;
     
-    NSDictionary *attributes = [self.layoutAttributes count] ? self.layoutAttributes[0] : @{};
-    
     CGContextRef context = UIGraphicsGetCurrentContext();
     
     for (NSInteger i = 0; i < numberOfDays; i++) {
@@ -426,7 +424,7 @@ static UIImage *tileImage;
         }
         
         CGRect rect = [self rectForCellAtIndex:i];
-        NSDictionary *layoutAttributes = [self.layoutAttributes count] > i+1 ? self.layoutAttributes[i+1] : @{};
+        NSDictionary *layoutAttributes = [self.layoutAttributes count] > i ? self.layoutAttributes[i] : @{};
         [self drawTileInRect:rect index:i day:day dayInMonth:dayInMonth layoutAttributes:layoutAttributes context:context];
     }
 }
