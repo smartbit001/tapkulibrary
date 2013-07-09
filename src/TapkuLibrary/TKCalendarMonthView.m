@@ -311,27 +311,40 @@ static UIImage *tileImage;
     NSInteger column = index % 7;
     BOOL weekend = (column == 5 || column == 6);
     
-    NSLog(@"Index: %d; Day: %d; Weekend: %@; Rect: (%f, %f, %f, %f)", index, day, weekend ? @"YES" : @"NO", rect.origin.x, rect.origin.y, rect.size.width, rect.size.height);
-    
-    if (today == day) {
-        UIColor *color = [UIColor colorWithRed:255/255.0 green:82/255.0 blue:14/255.0 alpha:1.0];
-        [self drawCircleInRect:rect color:color context:context];
-    }
-    
-    UIColor *color = layoutAttributes[@"FontColor"];
-    
-    if (!color) {
-        if (weekend) {
-            color = [UIColor whiteColor];
-        } else if (today == day) {
-            color = [UIColor whiteColor];
-        } else if (!dayInMonth) {
-            color = [UIColor whiteColor];
+    UIColor *fontColor = layoutAttributes[@"FontColor"];
+    UIColor *backgroundColor = layoutAttributes[@"BackgroundColor"];
+    UIColor *strokeColor = [UIColor colorWithHex:0xb3b3b3];
+    if (!backgroundColor) {
+        if (!dayInMonth) {
+            backgroundColor = [UIColor whiteColor];
         } else {
-            color = [UIColor blackColor];
+            backgroundColor = [UIColor colorWithHex:0xe6e6e6];
         }
     }
-    [color set];
+    
+    if ([layoutAttributes[@"PartOfDay"] isEqualToString:@"am"]) {
+        [self drawTriangleInRect:rect strokeColor:strokeColor fillColor:backgroundColor context:context am:YES];
+    } else if ([layoutAttributes[@"PartOfDay"] isEqualToString:@"pm"]) {
+        [self drawTriangleInRect:rect strokeColor:strokeColor fillColor:backgroundColor context:context am:NO];
+    } else {
+        [self drawRectInRect:rect strokeColor:strokeColor fillColor:backgroundColor context:context];
+    }
+    
+    if (today == day && dayInMonth) {
+        UIColor *color = [UIColor colorWithRed:255/255.0 green:82/255.0 blue:14/255.0 alpha:1.0];
+        [self drawCircleInRect:rect strokeColor:color fillColor:color context:context];
+    }
+    
+    if (!fontColor) {
+        if (!dayInMonth) {
+            fontColor = [UIColor colorWithHex:0xdddddd];
+        } else if (today == day) {
+            fontColor = [UIColor whiteColor];
+        } else {
+            fontColor = [UIColor blackColor];
+        }
+    }
+    [fontColor set];
     
     NSString *dayInMonthString = [numberFormatter stringFromNumber:@(day)];
     UIFont *font = [UIFont boldSystemFontOfSize:DATE_FONT_SIZE];
@@ -340,16 +353,54 @@ static UIImage *tileImage;
     CGContextRestoreGState(context);
 }
 
-- (void) drawCircleInRect:(CGRect)rect color:(UIColor *)color context:(CGContextRef)context {
+- (void) drawCircleInRect:(CGRect)rect strokeColor:(UIColor *)strokeColor fillColor:(UIColor *)fillColor context:(CGContextRef)context {
     CGContextSaveGState(context);
     
-    [color set];
+    CGContextSetStrokeColorWithColor(context, strokeColor.CGColor);
+    CGContextSetFillColorWithColor(context, fillColor.CGColor);
     
     CGPoint center = CGPointMake(rect.origin.x + rect.size.width / 2, rect.origin.y - 6 + rect.size.height / 2); // get the circle centre
     CGFloat radius = 0.35 * rect.size.width; // little scaling needed
     CGFloat startAngle = -((float)M_PI / 2); // 90 degrees
     CGFloat endAngle = ((2 * (float)M_PI) + startAngle);
     CGContextAddArc(context, center.x, center.y, radius, startAngle, endAngle, 0);
+    CGContextDrawPath(context, kCGPathFillStroke);
+    
+    CGContextRestoreGState(context);
+}
+
+- (void) drawRectInRect:(CGRect)rect strokeColor:(UIColor *)strokeColor fillColor:(UIColor *)fillColor context:(CGContextRef)context {
+    CGContextSaveGState(context);
+    
+    CGContextSetStrokeColorWithColor(context, strokeColor.CGColor);
+    CGContextSetFillColorWithColor(context, fillColor.CGColor);
+    
+    CGContextAddRect(context, CGRectOffset(rect, 0, -6));
+    CGContextDrawPath(context, kCGPathFillStroke);
+    
+    CGContextRestoreGState(context);
+}
+
+- (void) drawTriangleInRect:(CGRect)rect strokeColor:(UIColor *)strokeColor fillColor:(UIColor *)fillColor context:(CGContextRef)context am:(BOOL)am {
+    CGContextSaveGState(context);
+    
+    rect = CGRectOffset(rect, 0, -6);
+    
+    CGContextSetStrokeColorWithColor(context, strokeColor.CGColor);
+    CGContextSetFillColorWithColor(context, fillColor.CGColor);
+    
+    CGContextBeginPath(context);
+    if (am) {
+        CGContextMoveToPoint   (context, CGRectGetMinX(rect), CGRectGetMinY(rect));  // top left
+        CGContextAddLineToPoint(context, CGRectGetMaxX(rect), CGRectGetMaxY(rect));  // bottom right
+        CGContextAddLineToPoint(context, CGRectGetMinX(rect), CGRectGetMaxY(rect));  // bottom left
+    } else {
+        CGContextMoveToPoint   (context, CGRectGetMinX(rect), CGRectGetMinY(rect));  // top left
+        CGContextAddLineToPoint(context, CGRectGetMaxX(rect), CGRectGetMinY(rect));  // top right
+        CGContextAddLineToPoint(context, CGRectGetMaxX(rect), CGRectGetMaxY(rect));  // bottom right
+    }
+    CGContextClosePath(context);
+    
     CGContextDrawPath(context, kCGPathFillStroke);
     
     CGContextRestoreGState(context);
@@ -385,82 +436,6 @@ static UIImage *tileImage;
         NSDictionary *layoutAttributes = [self.layoutAttributes count] > i+1 ? self.layoutAttributes[i+1] : @{};
         [self drawTileInRect:rect index:i day:day dayInMonth:dayInMonth layoutAttributes:layoutAttributes context:context];
     }
-    
-    //
-    //	if(today > 0){
-    //		NSInteger pre = firstOfPrev > 0 ? lastOfPrev - firstOfPrev + 1 : 0;
-    //		NSInteger index = today +  pre-1;
-    //		CGRect r = [self rectForCellAtIndex:index];
-    //		r.origin.y -= 6;
-    //        UIImage *monthCalendarTodayTile = attributes[@"TileImageToday"] ?: [UIImage imageWithContentsOfFile:TKBUNDLE(@"calendar/Month Calendar Today Tile.png")];
-    //		[monthCalendarTodayTile drawInRect:r];
-    //	}
-    //
-    //
-    //
-    //	float myColorValues[] = {1, 1, 1, .8};
-    //    CGColorSpaceRef myColorSpace = CGColorSpaceCreateDeviceRGB();
-    //    CGColorRef whiteColor = CGColorCreate(myColorSpace, myColorValues);
-    //	CGContextSetShadowWithColor(context, CGSizeMake(0,1), 0, whiteColor);
-    //
-    //	float darkColorValues[] = {0, 0, 0, .5};
-    //    CGColorRef darkColor = CGColorCreate(myColorSpace, darkColorValues);
-    //
-    //
-    //	NSInteger index = 0, mc = self.marks.count;
-    //
-    //
-    //	UIFont *font = [UIFont boldSystemFontOfSize:DATE_FONT_SIZE];
-    //	UIFont *font2 =[UIFont boldSystemFontOfSize:DOT_FONT_SIZE];
-    //	UIColor *color = attributes[@"FontColorPrevNextMonth"] ?: grayGradientColor; // prev / next month font color
-    //
-    //	if(firstOfPrev>0){
-    //		[color set];
-    //		for(NSInteger i = firstOfPrev;i<= lastOfPrev;i++){
-    //			r = [self rectForCellAtIndex:index];
-    //
-    //			BOOL mark = mc > 0 && index < mc ? [self.marks[index] boolValue] : NO;
-    //			[self drawTileInRect:r day:i mark:mark font:font font2:font2 context:context];
-    //
-    //			index++;
-    //		}
-    //	}
-    //
-    //	color = attributes[@"FontColorNormalDay"] ?: gradientColor; // normal font color
-    //	[color set];
-    //
-    //	for(NSInteger i=1; i <= daysInMonth; i++){
-    //		r = [self rectForCellAtIndex:index];
-    //		if(today == i){
-    //			CGContextSetShadowWithColor(context, CGSizeMake(0,-1), 0, darkColor);
-    //			[[UIColor whiteColor] set];
-    //			r.origin.y += 1;
-    //		}
-    //
-    //		BOOL mark = mc > 0 && index < mc ? [self.marks[index] boolValue] : NO;
-    //		[self drawTileInRect:r day:i mark:mark font:font font2:font2 context:context];
-    //
-    //		if(today == i){
-    //			CGContextSetShadowWithColor(context, CGSizeMake(0,1), 0, whiteColor);
-    //			[color set];
-    //		}
-    //		index++;
-    //	}
-    //
-    //	CGColorRelease(darkColor);
-    //	CGColorRelease(whiteColor);
-    //	CGColorSpaceRelease(myColorSpace);
-    //
-    //    color = attributes[@"FontColorPrevNextMonth"] ?: grayGradientColor; // prev / next month font color
-    //	[color set];
-    //	NSInteger i = 1;
-    //	while(index % 7 != 0){
-    //		r = [self rectForCellAtIndex:index];
-    //		BOOL mark = mc > 0 && index < mc ? [self.marks[index] boolValue] : NO;
-    //		[self drawTileInRect:r day:i mark:mark font:font font2:font2 context:context];
-    //		i++;
-    //		index++;
-    //	}
 }
 
 - (BOOL) selectDay:(NSInteger)day{
