@@ -358,7 +358,7 @@ static UIImage *tileImage;
     CGContextSetFillColorWithColor(context, fillColor.CGColor);
     
     CGPoint center = CGPointMake(rect.origin.x + rect.size.width / 2, rect.origin.y - 6 + rect.size.height / 2); // get the circle centre
-    CGFloat radius = 0.35 * rect.size.width; // little scaling needed
+    CGFloat radius = 0.45 * rect.size.width; // little scaling needed
     CGFloat startAngle = -((float)M_PI / 2); // 90 degrees
     CGFloat endAngle = ((2 * (float)M_PI) + startAngle);
     CGContextAddArc(context, center.x, center.y, radius, startAngle, endAngle, 0);
