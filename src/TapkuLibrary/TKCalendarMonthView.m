@@ -311,22 +311,41 @@ static UIImage *tileImage;
     UIColor *backgroundColor = layoutAttributes[@"BackgroundColor"];
     UIColor *strokeColor = [UIColor colorWithHex:0xb3b3b3];
     if (!backgroundColor) {
-        if (!dayInMonth) {
-            backgroundColor = [UIColor whiteColor];
-        } else {
-            backgroundColor = [UIColor colorWithHex:0xe6e6e6];
-        }
+        backgroundColor = dayInMonth ? [UIColor colorWithHex:0xe6e6e6] : [UIColor whiteColor];
     }
     
-    if ([layoutAttributes[@"PartOfDay"] isEqualToString:@"am"]) {
-        [self drawRectInRect:rect strokeColor:strokeColor fillColor:[UIColor colorWithHex:0xe6e6e6] context:context];
-        [self drawTriangleInRect:rect strokeColor:strokeColor fillColor:backgroundColor context:context am:YES];
-    } else if ([layoutAttributes[@"PartOfDay"] isEqualToString:@"pm"]) {
-        [self drawRectInRect:rect strokeColor:strokeColor fillColor:[UIColor colorWithHex:0xe6e6e6] context:context];
-        [self drawTriangleInRect:rect strokeColor:strokeColor fillColor:backgroundColor context:context am:NO];
-    } else {
-        [self drawRectInRect:rect strokeColor:strokeColor fillColor:backgroundColor context:context];
+    [self drawRectInRect:rect strokeColor:strokeColor fillColor:backgroundColor context:context]; // background
+    
+    if (layoutAttributes[@"TopLeftBackgroundColor"]) {
+        [self drawTriangleInRect:rect
+                     strokeColor:layoutAttributes[@"TopLeftBackgroundColor"]
+                       fillColor:layoutAttributes[@"TopLeftBackgroundColor"]
+                         context:context
+                          corner:TKCalendarMonthTilesCornerTopLeft];
     }
+    if (layoutAttributes[@"BottomLeftBackgroundColor"]) {
+        [self drawTriangleInRect:rect
+                     strokeColor:layoutAttributes[@"BottomLeftBackgroundColor"]
+                       fillColor:layoutAttributes[@"BottomLeftBackgroundColor"]
+                         context:context
+                          corner:TKCalendarMonthTilesCornerBottomLeft];
+    }
+    if (layoutAttributes[@"BottomRightBackgroundColor"]) {
+        [self drawTriangleInRect:rect
+                     strokeColor:layoutAttributes[@"BottomRightBackgroundColor"]
+                       fillColor:layoutAttributes[@"BottomRightBackgroundColor"]
+                         context:context
+                          corner:TKCalendarMonthTilesCornerBottomRight];
+    }
+    if (layoutAttributes[@"TopRightBackgroundColor"]) {
+        [self drawTriangleInRect:rect
+                     strokeColor:layoutAttributes[@"TopRightBackgroundColor"]
+                       fillColor:layoutAttributes[@"TopRightBackgroundColor"]
+                         context:context
+                          corner:TKCalendarMonthTilesCornerTopRight];
+    }
+    
+    [self drawRectInRect:rect strokeColor:strokeColor fillColor:[UIColor clearColor] context:context]; // stroke
     
     if (today == day && dayInMonth) {
         UIColor *color = [UIColor colorWithRed:255/255.0 green:82/255.0 blue:14/255.0 alpha:1.0];
@@ -379,7 +398,7 @@ static UIImage *tileImage;
     CGContextRestoreGState(context);
 }
 
-- (void) drawTriangleInRect:(CGRect)rect strokeColor:(UIColor *)strokeColor fillColor:(UIColor *)fillColor context:(CGContextRef)context am:(BOOL)am {
+- (void) drawTriangleInRect:(CGRect)rect strokeColor:(UIColor *)strokeColor fillColor:(UIColor *)fillColor context:(CGContextRef)context corner:(TKCalendarMonthTilesCorner)corner {
     CGContextSaveGState(context);
     
     rect = CGRectOffset(rect, 0, -6);
@@ -388,14 +407,33 @@ static UIImage *tileImage;
     CGContextSetFillColorWithColor(context, fillColor.CGColor);
     
     CGContextBeginPath(context);
-    if (am) {
-        CGContextMoveToPoint   (context, CGRectGetMinX(rect), CGRectGetMinY(rect));  // top left
-        CGContextAddLineToPoint(context, CGRectGetMaxX(rect), CGRectGetMaxY(rect));  // bottom right
-        CGContextAddLineToPoint(context, CGRectGetMinX(rect), CGRectGetMaxY(rect));  // bottom left
-    } else {
-        CGContextMoveToPoint   (context, CGRectGetMinX(rect), CGRectGetMinY(rect));  // top left
-        CGContextAddLineToPoint(context, CGRectGetMaxX(rect), CGRectGetMinY(rect));  // top right
-        CGContextAddLineToPoint(context, CGRectGetMaxX(rect), CGRectGetMaxY(rect));  // bottom right
+    switch (corner) {
+        case TKCalendarMonthTilesCornerTopLeft: {
+            CGContextMoveToPoint   (context, CGRectGetMaxX(rect), CGRectGetMinY(rect));  // top right
+            CGContextAddLineToPoint(context, CGRectGetMinX(rect), CGRectGetMinY(rect));  // top left
+            CGContextAddLineToPoint(context, CGRectGetMinX(rect), CGRectGetMaxY(rect));  // bottom left
+            break;
+        }
+        case TKCalendarMonthTilesCornerBottomLeft: {
+            CGContextMoveToPoint   (context, CGRectGetMinX(rect), CGRectGetMinY(rect));  // top left
+            CGContextAddLineToPoint(context, CGRectGetMaxX(rect), CGRectGetMaxY(rect));  // bottom right
+            CGContextAddLineToPoint(context, CGRectGetMinX(rect), CGRectGetMaxY(rect));  // bottom left
+            break;
+        }
+        case TKCalendarMonthTilesCornerBottomRight:
+            CGContextMoveToPoint   (context, CGRectGetMinX(rect), CGRectGetMaxY(rect));  // bottom left
+            CGContextAddLineToPoint(context, CGRectGetMaxX(rect), CGRectGetMaxY(rect));  // bottom right
+            CGContextAddLineToPoint(context, CGRectGetMaxX(rect), CGRectGetMinY(rect));  // top right
+            break;
+        case TKCalendarMonthTilesCornerTopRight: {
+            CGContextMoveToPoint   (context, CGRectGetMinX(rect), CGRectGetMinY(rect));  // top left
+            CGContextAddLineToPoint(context, CGRectGetMaxX(rect), CGRectGetMinY(rect));  // top right
+            CGContextAddLineToPoint(context, CGRectGetMaxX(rect), CGRectGetMaxY(rect));  // bottom right
+            break;
+        }
+            
+        default:
+            break;
     }
     CGContextClosePath(context);
     
@@ -536,7 +574,7 @@ static UIImage *tileImage;
 		portion = 2;
 		day = day - daysInMonth;
 	}
-	
+    
 	self.currentDay.font = [UIFont boldSystemFontOfSize:DATE_FONT_SIZE];
 	self.currentDay.hidden = NO;
 	self.dot.hidden = NO;
@@ -840,9 +878,17 @@ static UIImage *tileImage;
 
 #pragma mark Moving the tiles up and down
 - (void) _tileSelectedWithData:(NSArray*)ar{
-	
 	if(ar.count < 2){
 		
+        if ([self.delegate respondsToSelector:@selector(calendarMonthView:shouldSelectDate:)]) {
+            if (![self.delegate calendarMonthView:self shouldSelectDate:[self dateSelected]]) {
+                self.currentTile.selectedImageView.hidden = YES;
+                return;
+            } else {
+                self.currentTile.selectedImageView.hidden = NO;
+            }
+        }
+        
 		if([self.delegate respondsToSelector:@selector(calendarMonthView:didSelectDate:)])
 			[self.delegate calendarMonthView:self didSelectDate:[self dateSelected]];
 		
@@ -1053,6 +1099,12 @@ static UIImage *tileImage;
 - (BOOL) selectDate:(NSDate*)date{
 	if(date==nil) return NO;
 	
+    if ([self.delegate respondsToSelector:@selector(calendarMonthView:shouldSelectDate:)]) {
+        if (![self.delegate calendarMonthView:self shouldSelectDate:date]) {
+            [self.currentTile.selectedImageView removeFromSuperview];
+            return NO;
+        }
+    }
 	
 	NSDateComponents *info = [date dateComponentsWithTimeZone:self.timeZone];
 	NSDate *month = [date firstOfMonthWithTimeZone:self.timeZone];

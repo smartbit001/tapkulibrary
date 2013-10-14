@@ -32,6 +32,13 @@
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 
+typedef enum {
+    TKCalendarMonthTilesCornerTopLeft,
+    TKCalendarMonthTilesCornerBottomLeft,
+    TKCalendarMonthTilesCornerBottomRight,
+    TKCalendarMonthTilesCornerTopRight,
+} TKCalendarMonthTilesCorner;
+
 @class TKCalendarMonthTiles;
 @protocol TKCalendarMonthViewDelegate, TKCalendarMonthViewDataSource, TKCalendarMonthViewStyleProvider;
 
@@ -102,6 +109,8 @@
 /** The delegate of a `TKCalendarMonthView` object must adopt the `TKCalendarMonthViewDelegate` protocol. */
 @protocol TKCalendarMonthViewDelegate <NSObject>
 @optional
+
+- (BOOL)calendarMonthView:(TKCalendarMonthView *)monthView shouldSelectDate:(NSDate*)date;
 
 /** The highlighed date changed.
  @param monthView The calendar month view.
