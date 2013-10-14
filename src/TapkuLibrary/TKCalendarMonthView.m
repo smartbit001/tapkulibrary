@@ -262,9 +262,11 @@ static UIImage *tileImage;
 	
 	self.frame = CGRectMake(0, 1.0, VIEW_WIDTH, h+1);
 	
-	[self.selectedImageView addSubview:self.currentDay];
-	[self.selectedImageView addSubview:self.dot];
+    //	[self.selectedImageView addSubview:self.currentDay];
+    //	[self.selectedImageView addSubview:self.dot];
 	self.multipleTouchEnabled = NO;
+    
+    //    self.selectedImageView.hidden = YES;
     
     
 	return self;
@@ -352,6 +354,12 @@ static UIImage *tileImage;
         [self drawCircleInRect:rect strokeColor:color fillColor:color context:context];
     }
     
+    if (selectedDay == day && dayInMonth) {
+        UIColor *color = [UIColor blackColor];
+        fontColor = [UIColor whiteColor];
+        [self drawDiamondInRect:rect strokeColor:strokeColor fillColor:color context:context];
+    }
+    
     if (!fontColor) {
         if (!dayInMonth) {
             fontColor = [UIColor colorWithHex:0xdddddd];
@@ -366,6 +374,28 @@ static UIImage *tileImage;
     NSString *dayInMonthString = [numberFormatter stringFromNumber:@(day)];
     UIFont *font = [UIFont boldSystemFontOfSize:DATE_FONT_SIZE];
     [dayInMonthString drawInRect:rect withFont:font lineBreakMode:NSLineBreakByWordWrapping alignment:NSTextAlignmentCenter];
+    
+    CGContextRestoreGState(context);
+}
+
+- (void) drawDiamondInRect:(CGRect)rect strokeColor:(UIColor *)strokeColor fillColor:(UIColor *)fillColor context:(CGContextRef)context {
+    CGContextSaveGState(context);
+    
+    rect = CGRectOffset(rect, 0, -6);
+    
+    CGContextSetStrokeColorWithColor(context, strokeColor.CGColor);
+    CGContextSetFillColorWithColor(context, fillColor.CGColor);
+    
+    CGContextMoveToPoint(context, CGRectGetMinX(rect), CGRectGetMinY(rect)); // top left
+    CGContextAddLineToPoint(context, CGRectGetMinX(rect), CGRectGetMidY(rect)); // left center y
+    CGContextAddLineToPoint(context, CGRectGetMidX(rect), CGRectGetMaxY(rect)); // bottom center x
+    CGContextAddLineToPoint(context, CGRectGetMaxX(rect), CGRectGetMaxY(rect));  // bottom right
+    CGContextAddLineToPoint(context, CGRectGetMaxX(rect), CGRectGetMidY(rect)); // right center y
+    CGContextAddLineToPoint(context, CGRectGetMidX(rect), CGRectGetMinY(rect)); // top center x
+    
+    CGContextClosePath(context);
+    
+    CGContextDrawPath(context, kCGPathFillStroke);
     
     CGContextRestoreGState(context);
 }
@@ -485,14 +515,14 @@ static UIImage *tileImage;
 	if(day == today){
 		self.currentDay.shadowOffset = CGSizeMake(0, -1);
 		self.dot.shadowOffset = CGSizeMake(0, -1);
-		self.selectedImageView.image = attributes[@"TileImageTodaySelected"] ?: [UIImage imageWithContentsOfFile:TKBUNDLE(@"calendar/Month Calendar Today Selected Tile.png")];
+        //		self.selectedImageView.image = attributes[@"TileImageTodaySelected"] ?: [UIImage imageWithContentsOfFile:TKBUNDLE(@"calendar/Month Calendar Today Selected Tile.png")];
 		markWasOnToday = YES;
 		
 	}else if(markWasOnToday){
 		self.dot.shadowOffset = CGSizeMake(0, -1);
 		self.currentDay.shadowOffset = CGSizeMake(0, -1);
-		NSString *path = attributes[@"TileImageSelected"] ?: TKBUNDLE(@"calendar/Month Calendar Date Tile Selected.png");
-		self.selectedImageView.image = [[UIImage imageWithContentsOfFile:path] stretchableImageWithLeftCapWidth:1 topCapHeight:0];
+        //		NSString *path = attributes[@"TileImageSelected"] ?: TKBUNDLE(@"calendar/Month Calendar Date Tile Selected.png");
+        //		self.selectedImageView.image = [[UIImage imageWithContentsOfFile:path] stretchableImageWithLeftCapWidth:1 topCapHeight:0];
 		markWasOnToday = NO;
 	}
 	
@@ -515,9 +545,8 @@ static UIImage *tileImage;
 	}
     
 	self.selectedImageView.frame = CGRectMakeWithSize((column*46)-1, (row*44)-1, self.selectedImageView.frame.size);
-	[self addSubview:self.selectedImageView];
-	
-	
+    //[self addSubview:self.selectedImageView];
+    
 	return hasDot;
 	
 }
@@ -581,25 +610,25 @@ static UIImage *tileImage;
 	
 	if(portion != 1){
 		markWasOnToday = YES;
-		self.selectedImageView.image = nil;
-		self.selectedImageView.backgroundColor = [UIColor colorWithWhite:0 alpha:0.15];
+        //		self.selectedImageView.image = nil;
+        //		self.selectedImageView.backgroundColor = [UIColor colorWithWhite:0 alpha:0.15];
 		self.currentDay.hidden = YES;
 		self.dot.hidden = YES;
 		
 	}else if(portion==1 && day == today){
 		self.currentDay.shadowOffset = CGSizeMake(0, -1);
 		self.dot.shadowOffset = CGSizeMake(0, -1);
-		self.selectedImageView.image = [UIImage imageWithContentsOfFile:TKBUNDLE(@"calendar/Month Calendar Today Selected Tile.png")];
+        //		self.selectedImageView.image = [UIImage imageWithContentsOfFile:TKBUNDLE(@"calendar/Month Calendar Today Selected Tile.png")];
 		markWasOnToday = YES;
 	}else if(markWasOnToday){
 		self.dot.shadowOffset = CGSizeMake(0, -1);
 		self.currentDay.shadowOffset = CGSizeMake(0, -1);
-		NSString *path = TKBUNDLE(@"calendar/Month Calendar Date Tile Selected.png");
-		self.selectedImageView.image = [[UIImage imageWithContentsOfFile:path] stretchableImageWithLeftCapWidth:1 topCapHeight:0];
+        //		NSString *path = TKBUNDLE(@"calendar/Month Calendar Date Tile Selected.png");
+        //		self.selectedImageView.image = [[UIImage imageWithContentsOfFile:path] stretchableImageWithLeftCapWidth:1 topCapHeight:0];
 		markWasOnToday = NO;
 	}
 	
-	[self addSubview:self.selectedImageView];
+    //	[self addSubview:self.selectedImageView];
 	self.currentDay.text = [NSString stringWithFormat:@"%d",day];
 	
 	if (self.marks.count > 0) {
@@ -614,7 +643,7 @@ static UIImage *tileImage;
     
 	
 	
-	self.selectedImageView.frame = CGRectMakeWithSize((column*46)-1, (row*44)-1, self.selectedImageView.frame.size);
+    //	self.selectedImageView.frame = CGRectMakeWithSize((column*46)-1, (row*44)-1, self.selectedImageView.frame.size);
 	
 	if(day == selectedDay && selectedPortion == portion) return;
 	
@@ -630,6 +659,8 @@ static UIImage *tileImage;
 		selectedDay = day;
 		selectedPortion = portion;
 	}
+    
+    [self setNeedsDisplay];
 	
 }
 - (void) touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event{
