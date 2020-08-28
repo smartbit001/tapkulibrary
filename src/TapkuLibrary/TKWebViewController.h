@@ -31,9 +31,10 @@
 
 
 #import <UIKit/UIKit.h>
+#import <WebKit/WebKit.h>
 
 @interface TKWebViewController : UIViewController
 
-@property (nonatomic,strong) UIWebView *webView;
+@property (nonatomic,strong) WKWebView *webView;
 
 @end
