@@ -32,9 +32,15 @@
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 
+typedef enum {
+    TKCalendarMonthTilesCornerTopLeft,
+    TKCalendarMonthTilesCornerBottomLeft,
+    TKCalendarMonthTilesCornerBottomRight,
+    TKCalendarMonthTilesCornerTopRight,
+} TKCalendarMonthTilesCorner;
 
 @class TKCalendarMonthTiles;
-@protocol TKCalendarMonthViewDelegate, TKCalendarMonthViewDataSource;
+@protocol TKCalendarMonthViewDelegate, TKCalendarMonthViewDataSource, TKCalendarMonthViewStyleProvider;
 
 #pragma mark - TKCalendarMonthView
 /** `TKCalendarMonthView` imitates the month grid in the Calendar app on iPhone. */
@@ -66,6 +72,8 @@
 /** The data source must adopt the `TKCalendarMonthViewDataSource` protocol. The data source is not retained. */
 @property (nonatomic,assign) id <TKCalendarMonthViewDataSource> dataSource;
 
+@property (nonatomic, assign) id <TKCalendarMonthViewStyleProvider> styleProvider;
+
 /** The time zone for calendar grid. */
 @property (nonatomic,strong) NSTimeZone *timeZone;
 
@@ -76,12 +84,12 @@
 - (NSDate*) dateSelected;
 
 
-/** The current month date being displayed. 
+/** The current month date being displayed.
  @return An `NSDate` object set to the month and year of the current month grid.
  */
 - (NSDate*) monthDate;
 
-/** Selects a specific date in the month grid. 
+/** Selects a specific date in the month grid.
  @param date The date that will be highlighed.
  */
 - (BOOL) selectDate:(NSDate*)date;
@@ -98,14 +106,16 @@
 @end
 
 #pragma mark - TKCalendarMonthViewDelegate
-/** The delegate of a `TKCalendarMonthView` object must adopt the `TKCalendarMonthViewDelegate` protocol. */ 
+/** The delegate of a `TKCalendarMonthView` object must adopt the `TKCalendarMonthViewDelegate` protocol. */
 @protocol TKCalendarMonthViewDelegate <NSObject>
 @optional
+
+- (BOOL)calendarMonthView:(TKCalendarMonthView *)monthView shouldSelectDate:(NSDate*)date;
 
 /** The highlighed date changed.
  @param monthView The calendar month view.
  @param date The highlighted date.
- */ 
+ */
 - (void) calendarMonthView:(TKCalendarMonthView*)monthView didSelectDate:(NSDate*)date;
 
 
@@ -114,26 +124,26 @@
  @param month The month date.
  @param animated Animation flag
  @return YES if the month should change. NO otherwise
- */ 
+ */
 - (BOOL) calendarMonthView:(TKCalendarMonthView*)monthView monthShouldChange:(NSDate*)month animated:(BOOL)animated;
 
 /** The calendar will change the current month to grid shown.
  @param monthView The calendar month view.
  @param month The month date.
  @param animated Animation flag
- */ 
+ */
 - (void) calendarMonthView:(TKCalendarMonthView*)monthView monthWillChange:(NSDate*)month animated:(BOOL)animated;
 
 /** The calendar did change the current month to grid shown.
  @param monthView The calendar month view.
  @param month The month date.
  @param animated Animation flag
- */ 
+ */
 - (void) calendarMonthView:(TKCalendarMonthView*)monthView monthDidChange:(NSDate*)month animated:(BOOL)animated;
 @end
 
 #pragma mark - TKCalendarMonthViewDataSource
-/** The data source of a `TKCalendarMonthView` object must adopt the `TKCalendarMonthViewDataSource` protocol. */ 
+/** The data source of a `TKCalendarMonthView` object must adopt the `TKCalendarMonthViewDataSource` protocol. */
 @protocol TKCalendarMonthViewDataSource <NSObject>
 
 /** A data source that will correspond to marks for the calendar month grid for a particular month.
@@ -143,5 +153,12 @@
  @return Returns an array of NSNumber objects corresponding the number of days specified in the start and last day parameters. Each NSNumber variable will give a BOOL value that will be used to display a dot under the day.
  */
 - (NSArray*) calendarMonthView:(TKCalendarMonthView*)monthView marksFromDate:(NSDate*)startDate toDate:(NSDate*)lastDate;
+
+@end
+
+#pragma mark - TKCalendarMonthViewStyleProvider
+@protocol TKCalendarMonthViewStyleProvider <NSObject>
+
+- (NSArray*) calendarMonthView:(TKCalendarMonthView*)monthView layoutAttributesFromDate:(NSDate*)startDate toDate:(NSDate*)lastDate;
 
 @end
